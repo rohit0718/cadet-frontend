@@ -15,9 +15,10 @@ export const URL_SHORTENER = process.env.REACT_APP_URL_SHORTENER_DOMAIN;
 export const URL_SHORTENER_SIGNATURE = process.env.REACT_APP_URL_SHORTENER_SIGNATURE;
 
 export const MODULE_BACKEND_URL =
-  process.env.MODULE_BACKEND_URL === undefined || process.env.MODULE_BACKEND_URL === ''
+  process.env.REACT_APP_MODULE_BACKEND_URL === undefined ||
+  process.env.REACT_APP_MODULE_BACKEND_URL === ''
     ? 'modules'
-    : process.env.MODULE_BACKEND_URL;
+    : process.env.REACT_APP_MODULE_BACKEND_URL;
 
 export enum LINKS {
   GITHUB_ISSUES = 'https://github.com/source-academy/cadet-frontend/issues',
