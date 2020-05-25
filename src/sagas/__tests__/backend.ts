@@ -18,6 +18,8 @@ import {
 import { mockGroupOverviews } from '../../mocks/groupAPI';
 import { mockNotifications } from '../../mocks/userAPI';
 import { GameState, Role, Story } from '../../reducers/states';
+import { OAUTH2_PROVIDERS } from '../../utils/constants';
+import { computeRedirectUri } from '../../utils/login';
 import { showSuccessMessage, showWarningMessage } from '../../utils/notification';
 import backendSaga from '../backend';
 import {
@@ -63,68 +65,71 @@ const errorResp = { ok: false };
 // ----------------------------------------
 
 describe('Test FETCH_AUTH Action', () => {
+  const code = 'luminusCode';
+  const providerId = 'provider';
+  const clientId = 'clientId';
+  OAUTH2_PROVIDERS.set(providerId, {
+    name: providerId,
+    endpoint: `https://test/?client_id=${clientId}`,
+    isDefault: true
+  });
+  const redirectUrl = computeRedirectUri(providerId);
+
+  const user = {
+    name: 'user',
+    role: 'student' as Role,
+    group: '42D',
+    story: {
+      story: '',
+      playStory: false
+    } as Story,
+    grade: 1,
+    gameState: {
+      collectibles: {},
+      completed_quests: []
+    } as GameState
+  };
+
   test('when tokens and user obtained', () => {
-    const luminusCode = 'luminusCode';
-    const user = {
-      name: 'user',
-      role: 'student' as Role,
-      group: '42D',
-      story: {
-        story: '',
-        playStory: false
-      } as Story,
-      grade: 1,
-      gameState: {
-        collectibles: {},
-        completed_quests: []
-      } as GameState
-    };
     return expectSaga(backendSaga)
-      .call(postAuth, luminusCode)
+      .call(postAuth, code, providerId, clientId, redirectUrl)
       .call(getUser, mockTokens)
       .put(actions.setTokens(mockTokens))
       .put(actions.setUser(user))
-      .provide([[call(postAuth, luminusCode), mockTokens], [call(getUser, mockTokens), user]])
-      .dispatch({ type: actionTypes.FETCH_AUTH, payload: luminusCode })
+      .provide([
+        [call(postAuth, code, providerId, clientId, redirectUrl), mockTokens],
+        [call(getUser, mockTokens), user]
+      ])
+      .dispatch({ type: actionTypes.FETCH_AUTH, payload: { code, providerId } })
       .silentRun();
   });
 
   test('when tokens is null', () => {
-    const luminusCode = 'luminusCode';
-    const user = {
-      name: 'user',
-      role: 'student' as Role,
-      group: '42D',
-      story: {
-        story: '',
-        playStory: false
-      } as Story,
-      grade: 1,
-      gameState: {
-        collectibles: {},
-        completed_quests: []
-      } as GameState
-    };
     return expectSaga(backendSaga)
-      .provide([[call(postAuth, luminusCode), null], [call(getUser, mockTokens), user]])
-      .call(postAuth, luminusCode)
+      .provide([
+        [call(postAuth, code, providerId, clientId, redirectUrl), null],
+        [call(getUser, mockTokens), user]
+      ])
+      .call(postAuth, code, providerId, clientId, redirectUrl)
       .not.call.fn(getUser)
       .not.put.actionType(actionTypes.SET_TOKENS)
       .not.put.actionType(actionTypes.SET_USER)
-      .dispatch({ type: actionTypes.FETCH_AUTH, payload: luminusCode })
+      .dispatch({ type: actionTypes.FETCH_AUTH, payload: { code, providerId } })
       .silentRun();
   });
 
   test('when user is null', () => {
-    const luminusCode = 'luminusCode';
     const nullUser = null;
     return expectSaga(backendSaga)
-      .provide([[call(postAuth, luminusCode), mockTokens], [call(getUser, mockTokens), nullUser]])
-      .call(postAuth, luminusCode)
+      .provide([
+        [call(postAuth, code, providerId, clientId, redirectUrl), mockTokens],
+        [call(getUser, mockTokens), nullUser]
+      ])
+      .call(postAuth, code, providerId, clientId, redirectUrl)
       .call(getUser, mockTokens)
       .not.put.actionType(actionTypes.SET_TOKENS)
       .not.put.actionType(actionTypes.SET_USER)
-      .dispatch({ type: actionTypes.FETCH_AUTH, payload: luminusCode })
+      .dispatch({ type: actionTypes.FETCH_AUTH, payload: { code, providerId } })
       .silentRun();
   });
 });

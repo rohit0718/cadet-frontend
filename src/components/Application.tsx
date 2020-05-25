@@ -9,6 +9,7 @@ import MissionControlContainer from '../containers/missionControl';
 import Playground from '../containers/PlaygroundContainer';
 import Sourcecast from '../containers/sourcecast/SourcecastContainer';
 import { Role, sourceLanguages } from '../reducers/states';
+import { OAUTH2_PROVIDERS } from '../utils/constants';
 import { stringParamToInt } from '../utils/paramParseHelpers';
 import { ExternalLibraryName, ExternalLibraryNames } from './assessment/assessmentShape';
 import Contributors from './contributors';
@@ -88,9 +89,20 @@ const toAcademy = (props: IApplicationProps) =>
     ? () => <Redirect to="/login" />
     : () => <Academy accessToken={props.accessToken} role={props.role!} />;
 
-const toLogin = (props: IApplicationProps) => () => (
-  <Login luminusCode={qs.parse(props.location.search).code} />
-);
+const toLogin = (props: IApplicationProps) => () => {
+  const qstr = qs.parse(props.location.search);
+
+  return (
+    <Login
+      code={qstr.code}
+      providerId={qstr.provider}
+      providers={[...OAUTH2_PROVIDERS.entries()].map(([id, { name }]) => ({
+        id,
+        name
+      }))}
+    />
+  );
+};
 
 const parsePlayground = (props: IApplicationProps) => {
   const prgrm = parsePrgrm(props);

@@ -40,11 +40,11 @@ test('acknowledgeNotifications generates correct action object', () => {
 });
 
 test('fetchAuth generates correct action object', () => {
-  const luminusCode = 'luminus-code-test';
-  const action = fetchAuth(luminusCode);
+  const code = 'luminus-code-test';
+  const action = fetchAuth(code);
   expect(action).toEqual({
     type: actionTypes.FETCH_AUTH,
-    payload: luminusCode
+    payload: { code }
   });
 });
 
@@ -106,9 +106,10 @@ test('fetchNotifications generates correct action object', () => {
 });
 
 test('login action generates correct action object', () => {
-  const action = login();
+  const action = login('provider');
   expect(action).toEqual({
-    type: actionTypes.LOGIN
+    type: actionTypes.LOGIN,
+    payload: 'provider'
   });
 });
 

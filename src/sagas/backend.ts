@@ -23,13 +23,24 @@ import {
 } from '../components/notification/notificationShape';
 import { GameState, IState, Role } from '../reducers/states';
 import { history } from '../utils/history';
+import { computeRedirectUri, getClientId, getDefaultProvider } from '../utils/login';
 import { showSuccessMessage, showWarningMessage } from '../utils/notification';
 import * as request from './requests';
 
 function* backendSaga(): SagaIterator {
   yield takeEvery(actionTypes.FETCH_AUTH, function*(action: ReturnType<typeof actions.fetchAuth>) {
-    const luminusCode = action.payload;
-    const tokens = yield call(request.postAuth, luminusCode);
+    const { code, providerId: payloadProviderId } = action.payload;
+    const providerId = payloadProviderId || (getDefaultProvider() || [null])[0];
+    if (!providerId) {
+      yield call(
+        showWarningMessage,
+        'Could not log in; invalid provider or no providers configured.'
+      );
+      return yield history.push('/');
+    }
+    const clientId = getClientId(providerId);
+    const redirectUrl = computeRedirectUri(providerId);
+    const tokens = yield call(request.postAuth, code, providerId, clientId, redirectUrl);
     if (!tokens) {
       return yield history.push('/');
     }

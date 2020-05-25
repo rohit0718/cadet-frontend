@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-export const LUMINUS_CLIENT_ID = process.env.REACT_APP_LUMINUS_CLIENT_ID;
 export const SOURCE_ACADEMY_VERSION = process.env.REACT_APP_VERSION;
 export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const USE_BACKEND =
@@ -20,6 +19,23 @@ export const MODULE_BACKEND_URL =
   process.env.REACT_APP_MODULE_BACKEND_URL === ''
     ? 'modules'
     : process.env.REACT_APP_MODULE_BACKEND_URL;
+
+export const OAUTH2_PROVIDERS: Map<
+  string,
+  { name: string; endpoint: string; isDefault: boolean }
+> = new Map();
+
+for (let i = 1; ; ++i) {
+  const id = process.env[`REACT_APP_OAUTH2_PROVIDER${i}`];
+  if (!id) {
+    break;
+  }
+
+  const name = process.env[`REACT_APP_OAUTH2_PROVIDER${i}_NAME`] || 'Unnamed provider';
+  const endpoint = process.env[`REACT_APP_OAUTH2_PROVIDER${i}_ENDPOINT`] || '';
+
+  OAUTH2_PROVIDERS.set(id, { name, endpoint, isDefault: i === 1 });
+}
 
 export enum LINKS {
   GITHUB_ISSUES = 'https://github.com/source-academy/cadet-frontend/issues',

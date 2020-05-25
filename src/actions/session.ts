@@ -11,7 +11,8 @@ import * as actionTypes from './actionTypes';
 
 import { Role } from '../reducers/states';
 
-export const fetchAuth = (luminusCode: string) => action(actionTypes.FETCH_AUTH, luminusCode);
+export const fetchAuth = (code: string, providerId?: string) =>
+  action(actionTypes.FETCH_AUTH, { code, providerId });
 
 export const fetchAnnouncements = () => action(actionTypes.FETCH_ANNOUNCEMENTS);
 
@@ -29,7 +30,7 @@ export const fetchGrading = (submissionId: number) =>
 export const fetchGradingOverviews = (filterToGroup = true) =>
   action(actionTypes.FETCH_GRADING_OVERVIEWS, filterToGroup);
 
-export const login = () => action(actionTypes.LOGIN);
+export const login = (providerId: string) => action(actionTypes.LOGIN, providerId);
 
 export const setGameState = (gameState: GameState) => action(actionTypes.SET_GAME_STATE, gameState);
 

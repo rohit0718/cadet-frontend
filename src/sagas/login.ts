@@ -1,17 +1,19 @@
 import { SagaIterator } from 'redux-saga';
-import { takeEvery } from 'redux-saga/effects';
+import { call, takeEvery } from 'redux-saga/effects';
+import * as actions from '../actions';
 import * as actionTypes from '../actions/actionTypes';
-import { LUMINUS_CLIENT_ID } from '../utils/constants';
+import { computeEndpointUrl } from '../utils/login';
+import { showWarningMessage } from '../utils/notification';
 
 export default function* loginSaga(): SagaIterator {
   yield takeEvery(actionTypes.LOGIN, updateLoginHref);
 }
 
-function* updateLoginHref() {
-  const apiLogin = 'https://luminus.nus.edu.sg/v2/auth/connect/authorize';
-  const clientId = LUMINUS_CLIENT_ID;
-  const port = window.location.port === '' ? '' : `:${window.location.port}`;
-  const callback = `${window.location.protocol}//${window.location.hostname}${port}/login`;
-  window.location.href = `${apiLogin}?client_id=${clientId}&redirect_uri=${callback}&response_type=code&scope=profile`;
-  yield undefined;
+function* updateLoginHref({ payload: providerId }: ReturnType<typeof actions.login>) {
+  const epUrl = computeEndpointUrl(providerId);
+  if (!epUrl) {
+    return call(showWarningMessage, 'Could not log in; invalid provider name provided.');
+  }
+  window.location.href = epUrl;
+  return undefined;
 }
