@@ -5,8 +5,8 @@ import {
   Icon,
   Navbar,
   NavbarDivider,
-  NavbarGroup
-  // NavbarHeading
+  NavbarGroup,
+  NavbarHeading
 } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 import * as classNames from 'classnames';
@@ -27,16 +27,16 @@ export interface INavigationBarProps {
 const NavigationBar: React.SFC<INavigationBarProps> = props => (
   <Navbar className={classNames('NavigationBar', 'primary-navbar', Classes.DARK)}>
     <NavbarGroup align={Alignment.LEFT}>
-      {/*
-      <NavLink
-        activeClassName={Classes.ACTIVE}
-        className={classNames('NavigationBar__link', Classes.BUTTON, Classes.MINIMAL)}
-        to="/academy"
-      >
-        <Icon icon={IconNames.SYMBOL_DIAMOND} />
-        <NavbarHeading className="hidden-xs hidden-sm">Source Academy</NavbarHeading>
-      </NavLink>
-     */}
+      {
+        <NavLink
+          activeClassName={Classes.ACTIVE}
+          className={classNames('NavigationBar__link', Classes.BUTTON, Classes.MINIMAL)}
+          to="/academy"
+        >
+          <Icon icon={IconNames.SYMBOL_DIAMOND} />
+          <NavbarHeading className="hidden-xs hidden-sm">Source Academy</NavbarHeading>
+        </NavLink>
+      }
 
       {/*
       <a
@@ -81,7 +81,7 @@ const NavigationBar: React.SFC<INavigationBarProps> = props => (
         to="/playground"
       >
         <Icon icon={IconNames.CODE} />
-        <div className="navbar-button-text hidden-xs hidden-sm">Source Academy Playground</div>
+        <div className="navbar-button-text hidden-xs hidden-sm">Playground</div>
       </NavLink>
     </NavbarGroup>
 
