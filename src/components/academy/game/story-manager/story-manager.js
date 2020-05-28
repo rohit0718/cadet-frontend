@@ -186,11 +186,9 @@ export function loadStoryXML(storyXMLs, willSave, callback) {
         sorted.push(storyId);
       }
     }
-    var index = 0;
-    while (index < willBeDownloaded.length) {
-      dfs(willBeDownloaded[index]);
-      while (willBeDownloaded[index] && visited[willBeDownloaded[index]]) {
-        index++;
+    for (var index = 0; index < willBeDownloaded.length; ++index) {
+      if (willBeDownloaded[index] && !visited[willBeDownloaded[index]]) {
+        dfs(willBeDownloaded[index]);
       }
     }
     // load quests and assets
