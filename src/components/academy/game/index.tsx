@@ -22,8 +22,8 @@ export type StateProps = {
 };
 
 export class Game extends React.Component<GameProps, {}> {
-  private canvas: HTMLCanvasElement;
-  private div: HTMLDivElement;
+  private canvas: React.RefObject<HTMLCanvasElement> = React.createRef();
+  private div: React.RefObject<HTMLDivElement> = React.createRef();
 
   /**
    * Basically, if the function story is called twice (on different canvas
@@ -46,14 +46,14 @@ export class Game extends React.Component<GameProps, {}> {
       // If assessment overviews are not loaded, fetch them
       this.props.handleAssessmentOverviewFetch();
       const loadingScreen: any = (await import('./story-xml-player.js')).loadingScreen;
-      loadingScreen(this.div, this.canvas);
-      this.props.handleSaveCanvas(this.canvas);
+      if (this.canvas.current) {
+        loadingScreen(this.div.current, this.canvas.current);
+        this.props.handleSaveCanvas(this.canvas.current);
+      }
     }
-    if (this.props.canvas !== undefined) {
+    if (this.props.canvas && this.div.current) {
       // This browser window has loaded the Game component & canvas before
-      this.canvas = this.props.canvas;
-      this.div.innerHTML = '';
-      this.div.appendChild(this.props.canvas);
+      this.div.current.appendChild(this.props.canvas);
     }
   }
 
@@ -68,21 +68,23 @@ export class Game extends React.Component<GameProps, {}> {
       setUserRole(this.props.role);
       setSaveHandler((gameState: GameState) => this.props.handleSaveData(gameState));
       story(
-        this.div,
-        this.canvas,
+        this.div.current,
+        this.props.canvas || this.canvas.current,
         this.props.name,
         this.props.story,
         this.props.gameState,
         this.props.assessmentOverviews
       );
-      this.props.handleSaveCanvas(this.canvas);
+      if (this.canvas.current) {
+        this.props.handleSaveCanvas(this.canvas.current);
+      }
     }
   }
 
   public render() {
     return (
-      <div id="game-display" className="sa-game" ref={e => (this.div = e!)}>
-        <canvas ref={e => (this.canvas = e!)} />
+      <div id="game-display" className="sa-game" ref={this.div}>
+        {!this.props.canvas && <canvas ref={this.canvas} />}
       </div>
     );
   }

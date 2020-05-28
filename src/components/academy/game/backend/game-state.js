@@ -4,7 +4,7 @@ import { isStudent } from './user';
 var SaveManager = require('../save-manager/save-manager.js');
 
 /**
- * Handles data regarding the game state. 
+ * Handles data regarding the game state.
  * - The student's list of completed quests and collectibles
  * - The student's current story mission
  * - The global list of missions that are open
@@ -34,7 +34,7 @@ export function fetchGameData(story, gameStates, missions, callback) {
   }
   if (!getSessionData()) {
     setSessionData(data);
-  } 
+  }
   if (!isStudent()) {
     // resets current progress (local storage) for testers
     SaveManager.resetLocalSaveData();
@@ -101,7 +101,7 @@ export function saveCollectible(collectible) {
 }
 
 export function hasCollectible(collectible) {
-  return hasBeenFetched() && 
+  return hasBeenFetched() &&
     getSessionData().gameStates.collectibles[collectible]  === 'completed';
 }
 
@@ -112,7 +112,7 @@ export function saveQuest(questId) {
 }
 
 export function hasCompletedQuest(questId) {
-  return hasBeenFetched() && 
+  return hasBeenFetched() &&
     getSessionData().gameStates.completed_quests.includes(questId);
 }
 
@@ -145,7 +145,7 @@ function organiseMissions(missions) {
       : Math.sign(openX - openY);
   }
   function isWithinDates(mission, date) {
-    return new Date(mission.openAt) <= now && 
+    return new Date(mission.openAt) <= now &&
         now <= new Date(mission.closeAt);
   }
   let predicate;
@@ -162,7 +162,7 @@ function organiseMissions(missions) {
       let toPass = true;
       if (!sessionStorage.getItem(OVERRIDE_DATES_KEY)) {
         toPass = isWithinDates(mission, now);
-      } 
+      }
       if (!sessionStorage.getItem(OVERRIDE_PUBLISH_KEY)) {
         toPass = toPass && mission.isPublished;
       }
@@ -172,7 +172,7 @@ function organiseMissions(missions) {
   const sorted_missions = missions.sort(compareMissions);
   const remaining_missions = sorted_missions.filter(predicate);
   //if no more remaining missions, use the last remaining mission.
-  return remaining_missions.length > 0 
+  return remaining_missions.length > 0
     ? remaining_missions
     : [sorted_missions[sorted_missions.length - 1]];
 }
@@ -184,24 +184,24 @@ function organiseMissions(missions) {
  */
 function getMissionPointer(missions, callback) {
   // in the scenario with no missions
-  if (missions == undefined) {
+  if (!missions) {
     return;
   }
   //finds the mission id's mission pointer
   let studentStory = getStudentStory();
-  const isStoryEmpty = story => story === undefined || story.length === 0;
-  let missionPointer = isStoryEmpty(studentStory) 
+  const isStoryEmpty = story => !story || story.length === 0;
+  let missionPointer = isStoryEmpty(studentStory)
     ? missions[0]
     : missions.find(mission => mission.story === studentStory);
   //if mission pointer is in localStorage and can't find any proper story.
-  if (missionPointer === undefined && SaveManager.hasLocalSave()) {
+  if (!missionPointer && SaveManager.hasLocalSave()) {
     localStorage.removeItem(SAVE_DATA_KEY);
     studentStory = getStudentStory();
-    missionPointer = isStoryEmpty(studentStory) 
+    missionPointer = isStoryEmpty(studentStory)
       ? missions[0]
       : missions.find(mission => mission.story === studentStory);
   }
-  if (missionPointer === undefined) {
+  if (!missionPointer) {
     missionPointer = missions[0];
   }
   callback(missionPointer && missionPointer.story);
