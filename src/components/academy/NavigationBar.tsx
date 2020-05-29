@@ -94,14 +94,14 @@ const NavigationBar: React.SFC<OwnProps> = props => (
           <div className="navbar-button-text hidden-xs">Ground Control</div>
         </NavLink>
 
-        <NavLink
+        {/*<NavLink
           to={'/academy/dashboard'}
           activeClassName={Classes.ACTIVE}
           className={classNames('NavigationBar__link', Classes.BUTTON, Classes.MINIMAL)}
         >
           <Icon icon="globe" />
           <div className="navbar-button-text hidden-xs">Dashboard</div>
-        </NavLink>
+        </NavLink>*/}
 
         <NavLink
           to={'/academy/sourcereel'}
@@ -125,14 +125,14 @@ const NavigationBar: React.SFC<OwnProps> = props => (
           />
         </NavLink>
 
-        <NavLink
+        {/* <NavLink
           to={'/academy/gamedev'}
           activeClassName={Classes.ACTIVE}
           className={classNames('NavigationBar__link', Classes.BUTTON, Classes.MINIMAL)}
         >
           <Icon icon={IconNames.CROWN} />
           <div className="navbar-button-text hidden-xs">Game Dev</div>
-        </NavLink>
+        </NavLink> */}
       </NavbarGroup>
     ) : null}
   </Navbar>
