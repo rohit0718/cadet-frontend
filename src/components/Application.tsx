@@ -62,7 +62,7 @@ class Application extends React.Component<IApplicationProps, {}> {
         />
         <div className="Application__main">
           <Switch>
-            <Route path="/academy" component={toAcademy(this.props)} />
+            <Route path="/academy" render={toAcademy(this.props)} />
             <Route path={`/mission-control/${assessmentRegExp}`} render={toIncubator} />
             <Route path="/playground" component={Playground} />
             <Route path="/login" render={toLogin(this.props)} />

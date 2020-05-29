@@ -29,7 +29,9 @@ export interface IChapter {
 }
 
 export function DefaultChapter(props: IChapterProps) {
-  props.handleFetchChapter();
+  React.useEffect(() => {
+    props.handleFetchChapter();
+  }, [props.handleFetchChapter]);
 
   const chapters = sourceLanguages.map((lang: ISourceLanguage) => {
     return {

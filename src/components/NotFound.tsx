@@ -3,7 +3,7 @@ import { IconNames } from '@blueprintjs/icons';
 import * as classNames from 'classnames';
 import * as React from 'react';
 
-const NotFound: React.SFC<{}> = () => (
+const NotFound: React.FunctionComponent<any> = () => (
   <div className={classNames('NotFound', Classes.DARK)}>
     <NonIdealState
       icon={IconNames.ERROR}

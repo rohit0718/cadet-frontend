@@ -22,7 +22,7 @@ exports[`Login renders correctly 1`] = `
     <div className=\\"login-body\\">
       <Blueprint3.ButtonGroup fill={true} vertical={true}>
         <LoginButton handleClick={[Function: handleLogin]} name=\\"LumiNUS\\" id=\\"nusnet_id\\" />
-        <NavLink to=\\"/playground\\" activeClassName=\\"active\\" aria-current=\\"page\\">
+        <NavLink to=\\"/playground\\">
           <Blueprint3.Button className=\\"bp3-large\\" rightIcon=\\"code\\">
             Try out the playground
           </Blueprint3.Button>

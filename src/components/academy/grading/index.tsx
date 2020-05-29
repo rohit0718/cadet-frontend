@@ -9,11 +9,11 @@ import {
   Spinner
 } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { ValueFormatterParams } from 'ag-grid-community/dist/lib/entities/colDef';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { AgGridReact } from 'ag-grid-react';
-import { ValueFormatterParams } from 'ag-grid/dist/lib/entities/colDef';
-import 'ag-grid/dist/styles/ag-grid.css';
-import 'ag-grid/dist/styles/ag-theme-balham.css';
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
 
@@ -105,7 +105,7 @@ class Grading extends React.Component<IGradingProps, State> {
         field: 'notifications',
         cellRendererFramework: NotificationBadgeCell,
         width: 30,
-        suppressResize: true,
+        resizable: false,
         suppressMovable: true,
         suppressMenu: true,
         suppressSizeToFit: true
@@ -176,10 +176,10 @@ class Grading extends React.Component<IGradingProps, State> {
           handleAcknowledgeNotifications: this.props.handleAcknowledgeNotifications
         },
         width: 65,
-        suppressFilter: true,
-        suppressSorting: true,
+        filter: false,
+        sortable: false,
         suppressSizeToFit: true,
-        suppressResize: true,
+        resizable: false,
         cellStyle: {
           padding: 0
         }
@@ -195,10 +195,10 @@ class Grading extends React.Component<IGradingProps, State> {
           handleUnsubmitSubmission: this.props.handleUnsubmitSubmission,
           role: this.props.role
         },
-        suppressFilter: true,
-        suppressSorting: true,
+        filter: false,
+        sortable: false,
         suppressSizeToFit: true,
-        suppressResize: true,
+        resizable: false,
         cellStyle: {
           padding: 0
         }
@@ -321,10 +321,8 @@ class Grading extends React.Component<IGradingProps, State> {
         <div className="Grading">
           <div className="ag-grid-parent ag-theme-balham">
             <AgGridReact
-              gridAutoHeight={true}
-              enableColResize={true}
-              enableSorting={true}
-              enableFilter={true}
+              domLayout="autoHeight"
+              defaultColDef={{ sortable: true, filter: true, resizable: true }}
               columnDefs={this.columnDefs}
               onGridReady={this.onGridReady}
               onGridSizeChanged={this.resizeGrid}

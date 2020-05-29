@@ -2,6 +2,7 @@ import { Classes, Pre } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 import * as classNames from 'classnames';
 import * as React from 'react';
+import { RouteComponentProps } from 'react-router';
 
 import { Variant } from 'js-slang/dist/types';
 import { InterpreterOutput, SideContentType } from '../../reducers/states';
@@ -30,7 +31,7 @@ import {
 } from './sourcecastShape';
 import SourcecastTable from './SourcecastTable';
 
-export interface ISourcecastProps extends IDispatchProps, IStateProps {}
+export type ISourcecastProps = IStateProps & IDispatchProps & RouteComponentProps<{}>;
 
 export interface IStateProps {
   audioUrl: string;
