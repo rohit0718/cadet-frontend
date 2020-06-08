@@ -1,4 +1,4 @@
-import { require as acequire } from 'ace-builds';
+import { require as acequire, Ace } from 'ace-builds';
 import 'ace-builds/src-noconflict/ext-language_tools';
 import 'ace-builds/src-noconflict/ext-searchbox';
 import * as React from 'react';
@@ -62,10 +62,9 @@ type StateProps = {
 };
 
 class Editor extends React.PureComponent<EditorProps, {}> {
-  public ShareAce: any;
+  public ShareAce: any = null;
   public AceEditor: React.RefObject<AceEditor>;
-  private markerIds: number[];
-  private onChangeMethod: (newCode: string) => void;
+  private markerIds: number[] = [];
   private completer: {};
 
   constructor(props: EditorProps) {
@@ -136,7 +135,7 @@ class Editor extends React.PureComponent<EditorProps, {}> {
 
     // NOTE: the two `any`s below are because the Ace editor typedefs are
     // hopelessly incomplete
-    editor.on('gutterclick' as any, this.handleGutterClick);
+    editor.on('gutterclick' as any, this.handleGutterClick as any);
 
     // Change all info annotations to error annotations
     session.on('changeAnnotation' as any, this.handleAnnotationChange(session));
@@ -184,18 +183,9 @@ class Editor extends React.PureComponent<EditorProps, {}> {
 
   // chapter selector used to choose the correct source mode
   public chapterNo = () => {
-    let chapter = this.props.sourceChapter;
-    let variant = this.props.sourceVariant;
-    let external = this.props.externalLibraryName;
-    if (chapter === undefined) {
-      chapter = 1;
-    }
-    if (variant === undefined) {
-      variant = 'default';
-    }
-    if (external === undefined) {
-      external = 'NONE';
-    }
+    let chapter = this.props.sourceChapter || 1;
+    let variant = this.props.sourceVariant || 'default';
+    let external = this.props.externalLibraryName || 'NONE';
 
     HighlightRulesSelector(chapter, variant, external, Documentation.externalLibraries[external]);
     ModeSelector(chapter, variant, external);
@@ -218,7 +208,7 @@ class Editor extends React.PureComponent<EditorProps, {}> {
             height="100%"
             highlightActiveLine={false}
             mode={this.chapterNo()} // select according to props.sourceChapter
-            onChange={this.onChangeMethod}
+            onChange={this.onChange}
             onCursorChange={this.handleVariableHighlighting}
             theme="source"
             value={this.props.editorValue}
@@ -233,6 +223,19 @@ class Editor extends React.PureComponent<EditorProps, {}> {
       </HotKeys>
     );
   }
+
+  private onChange = (newCode: string, delta: Ace.Delta) => {
+    console.log('Change', newCode, delta);
+    if (this.props.handleUpdateHasUnsavedChanges) {
+      this.props.handleUpdateHasUnsavedChanges(true);
+    }
+    this.props.handleEditorValueChange(newCode);
+    this.handleVariableHighlighting();
+    const annotations = this.AceEditor.current!.editor.getSession().getAnnotations();
+    if (this.props.isEditorAutorun && annotations.length === 0) {
+      this.props.handleEditorEval();
+    }
+  };
 
   // Used in navigating from occurence to navigation
   private moveCursor = (position: Position) => {
@@ -567,15 +570,5 @@ const handlers = {
   goGreen: () => {}
 };
 
-// TODO: Removal
-// This interface is actually unused but ace poorly documents this feature so
-// we leave this here for reference.
-export interface IAutocompletionResult {
-  caption: string;
-  value: string;
-  meta?: string;
-  docHTML?: string;
-  score?: number;
-}
 
 export default Editor;

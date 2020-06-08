@@ -26,3 +26,13 @@ export type AceMouseEvent = {
   inSelection: () => boolean; // Determines if the mouse position is selected.
   getButton: () => number; // 0 for leftmouse, 1 for middlemouse, 2 for rightmouse
 };
+
+// This interface is actually unused but ace poorly documents this feature so
+// we leave this here for reference.
+export interface IAutocompletionResult {
+  caption: string;
+  value: string;
+  meta?: string;
+  docHTML?: string;
+  score?: number;
+}
