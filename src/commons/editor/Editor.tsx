@@ -14,7 +14,7 @@ import { Variant } from 'js-slang/dist/types';
 import { Documentation } from '../documentation/Documentation';
 import AceRange from './EditorAceRange';
 import { AceMouseEvent, Position } from './EditorTypes';
-import { defaultKeyBindings as keyBindings } from './HotkeyBindings';
+import { defaultKeyBindings as keyBindings, KeyBinding } from './HotkeyBindings';
 
 // =============== Mixins ===============
 import WithShareAce from './WithShareAce';
@@ -220,7 +220,7 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
     this.AceEditor.current!.editor.renderer.scrollCursorIntoView(position, 0.5);
   };
 
-  private generateKeyBindings = (bindings: typeof keyBindings) => {
+  private generateKeyBindings = (bindings: KeyBinding[]) => {
     return bindings.map(cmd => {
       const exec = typeof cmd.exec === 'function' ? cmd.exec : this[cmd.exec];
       if (typeof exec !== 'function') {
@@ -232,12 +232,12 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
   };
 
   // @ts-ignore. This is used by generateKeyBindings
-  private handleEditorEval = () => {
+  public handleEditorEval = () => {
     return this.props.handleEditorEval();
   };
 
   // @ts-ignore. This is used by generateKeyBindings
-  private handleRefactor = () => {
+  public handleRefactor = () => {
     const editor = (this.AceEditor.current as any).editor;
 
     if (!editor) {
@@ -308,4 +308,5 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
 const handlers = {
   goGreen: () => {}
 };
+
 export default WithTypeInference(WithNavigation(WithShareAce(WithHighlighting(EditorBase))));

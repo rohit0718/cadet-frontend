@@ -3,7 +3,7 @@ import { createContext, getTypeInformation } from 'js-slang';
 
 function WithTypeInference<C extends Constructor<EditorBase>>(Editor: C) {
   return class extends Editor {
-    protected handleTypeInferenceDisplay = (): void => {
+    public handleTypeInferenceDisplay = (): void => {
       const chapter = this.props.sourceChapter;
       const code = this.props.editorValue;
       const editor = this.AceEditor.current!.editor;

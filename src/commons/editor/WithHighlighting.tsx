@@ -54,7 +54,7 @@ function WithHighlighting<C extends Constructor<EditorBase>>(Editor: C) {
       }, 10);
     };
 
-    protected handleHighlightScope = () => {
+    public handleHighlightScope = () => {
       const editor = this.AceEditor.current!.editor;
       if (!editor) {
         return;

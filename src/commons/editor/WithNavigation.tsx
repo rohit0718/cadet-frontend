@@ -8,7 +8,7 @@ function WithNavigation<C extends Constructor<EditorBase>>(Editor: C) {
   return class extends Editor {
     // TODO: No documentation of what the function is supposed to do.
     // Related PR: https://github.com/source-academy/cadet-frontend/pull/1028
-    protected handleNavigate = () => {
+    public handleNavigate = () => {
       const chapter = this.props.sourceChapter;
       const variantString =
         this.props.sourceVariant === 'default' ? '' : `_${this.props.sourceVariant}`;
