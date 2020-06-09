@@ -1,24 +1,26 @@
 import React from 'react';
-import { IconName, Button, Card, Icon } from '@blueprintjs/core';
+import { Button, Card, Icon } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 
 type AchievementCardProps = {
-  hasDropdown: boolean;
-  icon: IconName;
-  isDropdown: boolean;
+  achievement: any;
+  isDropdownOpen: boolean;
   toggleDropdown: any;
-  toggleModal: any;
+  toggleModalPopup: any;
 };
 
 function AchievementCard(props: AchievementCardProps) {
-  const { hasDropdown, isDropdown, icon, toggleDropdown, toggleModal } = props;
+  const { achievement, isDropdownOpen, toggleDropdown, toggleModalPopup } = props;
+  const { title, subachievements } = achievement;
+
+  const hasSubachievement = subachievements.length !== 0;
 
   return (
-    <Card className="achievement">
-      {hasDropdown ? (
+    <Card className="achievement" onClick={toggleModalPopup(title)}>
+      { hasSubachievement ? (
         <div className="dropdown">
           <Button
-            icon={isDropdown ? IconNames.CARET_DOWN : IconNames.CARET_RIGHT}
+            icon={isDropdownOpen ? IconNames.CARET_DOWN : IconNames.CARET_RIGHT}
             minimal={true}
             onClick={toggleDropdown}
           />
@@ -27,8 +29,9 @@ function AchievementCard(props: AchievementCardProps) {
         <div className="dropdown"></div>
       )}
       <div className="icon">
-        <Icon icon={icon} iconSize={28} onClick={toggleModal} />
+        <Icon icon={IconNames.PREDICTIVE_ANALYSIS} iconSize={28} />
       </div>
+      <h2>{title}</h2>
     </Card>
   );
 }

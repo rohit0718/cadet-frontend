@@ -2,8 +2,23 @@ import React from 'react';
 
 import { Card } from '@blueprintjs/core';
 
-function SubAchievementCard() {
-  return <Card className="subachievement"></Card>;
+type SubachievementCardProps = {
+  subachievement: any;
+  toggleModalPopup: any;
 }
 
-export default SubAchievementCard;
+function SubachievementCard(props: SubachievementCardProps) {
+  const { subachievement, toggleModalPopup } = props;
+  const { title } = subachievement;
+  
+  console.log(subachievement);
+
+  return (
+    <Card className="subachievement" onClick={toggleModalPopup(title)}>
+      <h2>{title}</h2>
+      {console.log(subachievement)}
+    </Card>
+  )
+}
+
+export default SubachievementCard;
