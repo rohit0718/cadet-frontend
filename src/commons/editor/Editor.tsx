@@ -8,8 +8,7 @@ import { HotKeys } from 'react-hotkeys';
 
 import {
   createContext,
-  getAllOccurrencesInScope,
-  getTypeInformation,
+  getAllOccurrencesInScope
 } from 'js-slang';
 import { HighlightRulesSelector, ModeSelector } from 'js-slang/dist/editors/ace/modes/source';
 import 'js-slang/dist/editors/ace/theme/source';
@@ -29,6 +28,7 @@ import { ContextMenu, Menu, MenuItem } from '@blueprintjs/core';
 import WithShareAce from './WithShareAce';
 import WithHighlighting from './WithHighlighting';
 import WithNavigation from './WithNavigation';
+import WithTypeInference from './WithTypeInference';
 export type Constructor<T> = new (...args: any[]) => T;
 
 /**
@@ -309,49 +309,6 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
     ranges.forEach(range => selection.addRange(range));
   };
 
-  // @ts-ignore. This is used by generateKeyBindings
-  private handleTypeInferenceDisplay = (): void => {
-    const chapter = this.props.sourceChapter;
-    const code = this.props.editorValue;
-    const editor = this.AceEditor.current!.editor;
-    const pos = editor.getCursorPosition();
-    const token = editor.session.getTokenAt(pos.row, pos.column);
-
-    // comment out everyline of the inference string returned by getTypeInformation
-    const commentEveryLine = (str: string) => {
-      const arr = str.split('\n');
-      return arr
-        .filter(st => st !== '')
-        .map(st => '// ' + st)
-        .join('\n');
-    };
-
-    let output;
-
-    // display the information
-    if (this.props.handleSendReplInputToOutput) {
-      if (pos && token) {
-        // if the token is a comment, ignore it
-        if (token.type === 'comment') {
-          return;
-        }
-        const str = getTypeInformation(
-          code,
-          createContext(chapter),
-          { line: pos.row + 1, column: pos.column },
-          token.value
-        );
-        output = commentEveryLine(str);
-        if (str.length === 0) {
-          output = '// type information not found';
-        }
-      } else {
-        output = '// invalid token. Please put cursor on an identifier.';
-      }
-      this.props.handleSendReplInputToOutput(output);
-    }
-  };
-
   private handleGutterClick = (e: AceMouseEvent) => {
     const target = e.domEvent.target! as HTMLDivElement;
     if (
@@ -429,6 +386,4 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
 const handlers = {
   goGreen: () => { }
 };
-
-
-export default WithNavigation(WithShareAce(WithHighlighting(EditorBase)));
+export default WithTypeInference(WithNavigation(WithShareAce(WithHighlighting(EditorBase))));
