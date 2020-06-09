@@ -1,31 +1,35 @@
+/* tslint-disable no-unused-vars */
 import { require as acequire, Ace } from 'ace-builds';
 import 'ace-builds/src-noconflict/ext-language_tools';
 import 'ace-builds/src-noconflict/ext-searchbox';
 import * as React from 'react';
 import AceEditor, { IAceEditorProps } from 'react-ace';
 import { HotKeys } from 'react-hotkeys';
-import sharedbAce from 'sharedb-ace';
 
 import {
   createContext,
   getAllOccurrencesInScope,
-  getScope,
   getTypeInformation,
-  hasDeclaration
 } from 'js-slang';
 import { HighlightRulesSelector, ModeSelector } from 'js-slang/dist/editors/ace/modes/source';
 import 'js-slang/dist/editors/ace/theme/source';
 import { Variant } from 'js-slang/dist/types';
 
-import { checkSessionIdExists } from '../collabEditing/CollabEditingHelper';
+
 import { Documentation } from '../documentation/Documentation';
-import { Links } from '../utils/Constants';
 import AceRange from './EditorAceRange';
 import { AceMouseEvent, Position } from './EditorTypes';
 import { defaultKeyBindings as keyBindings } from './HotkeyBindings';
 
 // @ts-ignore
 import { ContextMenu, Menu, MenuItem } from '@blueprintjs/core';
+
+// =============== Mixins =============== 
+// @ts-ignore
+import WithShareAce from './WithShareAce';
+import WithHighlighting from './WithHighlighting';
+import WithNavigation from './WithNavigation';
+export type Constructor<T> = new (...args: any[]) => T;
 
 /**
  * @property editorValue - The string content of the react-ace editor
@@ -85,10 +89,11 @@ export type Comment = {
 // @ts-ignore
 const LineWidgets = acequire('ace/line_widgets').LineWidgets;
 
-class Editor extends React.PureComponent<EditorProps, {}> {
-  public ShareAce: any = null;
+export class EditorBase extends React.PureComponent<EditorProps, {}> {
   public AceEditor: React.RefObject<AceEditor>;
-  private markerIds: number[] = [];
+  // HOC: These props will be injected into AceEditor on render  
+  // Use this to pass any values/callbacks into it.
+  protected injectedRenderProps: { [key: string]: any } = {};
   private completer: {};
   // @ts-ignore
   private commentManager: any;
@@ -110,15 +115,19 @@ class Editor extends React.PureComponent<EditorProps, {}> {
     };
   }
 
+  public get editor() {
+    return this.AceEditor.current!.editor;
+  }
+
   public getBreakpoints() {
-    return this.AceEditor.current!.editor.session.getBreakpoints().filter(x => x != null);
+    return this.editor.session.getBreakpoints().filter(x => x != null);
   }
 
   public componentDidMount() {
     if (!this.AceEditor.current) {
       return;
     }
-    const editor = this.AceEditor.current!.editor;
+    const editor = this.editor;
     const session = editor.getSession();
 
     // TODO: Removal
@@ -155,12 +164,12 @@ class Editor extends React.PureComponent<EditorProps, {}> {
     gutter.addEventListener('contextmenu', (e: MouseEvent) => {
       e.preventDefault();
       ContextMenu.show(
-        <Menu onContextMenu={ () => false }>
+        <Menu onContextMenu={() => false}>
           <MenuItem icon="full-circle" text="Toggle Breakpoint" />
           <MenuItem icon="comment" text="Add comment" />
         </Menu>,
         { left: e.clientX, top: e.clientY },
-        () => { console.log('Closed');}
+        () => { console.log('Closed'); }
       );
       // indicate that context menu is open so we can add a CSS class to this element
       this.setState({ isContextMenuOpen: true });
@@ -173,20 +182,7 @@ class Editor extends React.PureComponent<EditorProps, {}> {
     // Start autocompletion
     acequire('ace/ext/language_tools').setCompleters([this.completer]);
 
-    // Has session ID
-    if (this.props.editorSessionId !== '') {
-      this.handleStartCollabEditing(editor);
-    }
 
-    this.handleVariableHighlighting();
-  }
-
-  public componentWillUnmount() {
-    if (this.ShareAce !== null) {
-      // Umounting, closing websocket
-      this.ShareAce.WS.close();
-    }
-    this.ShareAce = null;
   }
 
   public componentDidUpdate(prevProps: EditorProps) {
@@ -238,8 +234,7 @@ class Editor extends React.PureComponent<EditorProps, {}> {
             height="100%"
             highlightActiveLine={false}
             mode={this.chapterNo()} // select according to props.sourceChapter
-            onChange={this.onChange}
-            onCursorChange={this.handleVariableHighlighting}
+            onChange={this.onChange.bind(this)}
             theme="source"
             value={this.props.editorValue}
             width="100%"
@@ -248,19 +243,19 @@ class Editor extends React.PureComponent<EditorProps, {}> {
               enableLiveAutocompletion: true,
               fontFamily: "'Inconsolata', 'Consolas', monospace"
             }}
+            {...this.injectedRenderProps}
           />
         </div>
       </HotKeys>
     );
   }
 
-  private onChange = (newCode: string, delta: Ace.Delta) => {
+  protected onChange(newCode: string, delta: Ace.Delta) {
     console.log('Change', newCode, delta);
     if (this.props.handleUpdateHasUnsavedChanges) {
       this.props.handleUpdateHasUnsavedChanges(true);
     }
     this.props.handleEditorValueChange(newCode);
-    this.handleVariableHighlighting();
     const annotations = this.AceEditor.current!.editor.getSession().getAnnotations();
     if (this.props.isEditorAutorun && annotations.length === 0) {
       this.props.handleEditorEval();
@@ -292,55 +287,6 @@ class Editor extends React.PureComponent<EditorProps, {}> {
   };
 
   // @ts-ignore. This is used by generateKeyBindings
-  private handleNavigate = () => {
-    const chapter = this.props.sourceChapter;
-    const variantString =
-      this.props.sourceVariant === 'default' ? '' : `_${this.props.sourceVariant}`;
-    const pos = this.AceEditor.current!.editor.selection.getCursor();
-    const token = this.AceEditor.current!.editor.session.getTokenAt(pos.row, pos.column);
-    const url = Links.textbook;
-
-    const external =
-      this.props.externalLibraryName === undefined ? 'NONE' : this.props.externalLibraryName;
-    const externalUrl =
-      this.props.externalLibraryName === 'ALL' ? `External%20libraries` : external;
-    const ext = Documentation.externalLibraries[external];
-
-    this.props.handleDeclarationNavigate(this.AceEditor.current!.editor.getCursorPosition());
-
-    const newPos = this.AceEditor.current!.editor.selection.getCursor();
-    if (newPos.row !== pos.row || newPos.column !== pos.column) {
-      return;
-    }
-
-    if (
-      hasDeclaration(this.props.editorValue, createContext(chapter), {
-        line: newPos.row + 1, // getCursorPosition returns 0-indexed row, function here takes in 1-indexed row
-        column: newPos.column
-      })
-    ) {
-      return;
-    }
-
-    if (ext.some((node: { caption: string }) => node.caption === (token && token.value))) {
-      if (
-        token !== null &&
-        (/\bsupport.function\b/.test(token.type) || /\bbuiltinConsts\b/.test(token.type))
-      ) {
-        window.open(`${url}source/${externalUrl}/global.html#${token.value}`); // opens external library link
-      }
-    } else if (
-      token !== null &&
-      (/\bsupport.function\b/.test(token.type) || /\bbuiltinconsts\b/.test(token.type))
-    ) {
-      window.open(`${url}source/source_${chapter}${variantString}/global.html#${token.value}`); // opens builtn library link
-    }
-    if (token !== null && /\bstorage.type\b/.test(token.type)) {
-      window.open(`${url}source/source_${chapter}.pdf`);
-    }
-  };
-
-  // @ts-ignore. This is used by generateKeyBindings
   private handleRefactor = () => {
     const editor = (this.AceEditor.current as any).editor;
 
@@ -361,75 +307,6 @@ class Editor extends React.PureComponent<EditorProps, {}> {
       loc => new AceRange(loc.start.line - 1, loc.start.column, loc.end.line - 1, loc.end.column)
     );
     ranges.forEach(range => selection.addRange(range));
-  };
-
-  // @ts-ignore. This is used by generateKeyBindings
-  private handleHighlightScope = () => {
-    const editor = this.AceEditor.current!.editor;
-    if (!editor) {
-      return;
-    }
-    const code = this.props.editorValue;
-    const chapter = this.props.sourceChapter;
-    const position = editor.getCursorPosition();
-
-    const ranges = getScope(code, createContext(chapter), {
-      line: position.row + 1,
-      column: position.column
-    });
-
-    if (ranges.length !== 0) {
-      ranges.forEach(range => {
-        // Highlight the scope ranges
-        this.markerIds.push(
-          editor.session.addMarker(
-            new AceRange(
-              range.start.line - 1,
-              range.start.column,
-              range.end.line - 1,
-              range.end.column
-            ),
-            'ace_selection',
-            'text'
-          )
-        );
-      });
-    }
-  };
-
-  private handleVariableHighlighting = () => {
-    // using Ace Editor's way of highlighting as seen here: https://github.com/ajaxorg/ace/blob/master/lib/ace/editor.js#L497
-    // We use async blocks so we don't block the browser during editing
-
-    setTimeout(() => {
-      if (!this.AceEditor || !this.AceEditor.current || !this.AceEditor.current.editor) {
-        return;
-      }
-      const editor = (this.AceEditor.current as any).editor;
-      const session = editor.session;
-      const code = this.props.editorValue;
-      const chapterNumber = this.props.sourceChapter;
-      const position = editor.getCursorPosition();
-      if (!session || !session.bgTokenizer) {
-        return;
-      }
-      this.markerIds.forEach(id => {
-        session.removeMarker(id);
-      });
-      const ranges = getAllOccurrencesInScope(code, createContext(chapterNumber), {
-        line: position.row + 1,
-        column: position.column
-      }).map(
-        loc => new AceRange(loc.start.line - 1, loc.start.column, loc.end.line - 1, loc.end.column)
-      );
-
-      const markerType = 'ace_variable_highlighting';
-      const markerIds = ranges.map(range => {
-        // returns the marker ID for removal later
-        return session.addMarker(range, markerType, 'text');
-      });
-      this.markerIds = markerIds;
-    }, 10);
   };
 
   // @ts-ignore. This is used by generateKeyBindings
@@ -486,8 +363,8 @@ class Editor extends React.PureComponent<EditorProps, {}> {
     }
 
     // Ignore right-clicks, let the contextmenu handle it.
-    if (e.getButton() === 2) { 
-      return; 
+    if (e.getButton() === 2) {
+      return;
     }
 
     // Breakpoint related.
@@ -524,60 +401,7 @@ class Editor extends React.PureComponent<EditorProps, {}> {
     }
   };
 
-  private handleStartCollabEditing = (editor: any) => {
-    const ShareAce = new sharedbAce(this.props.editorSessionId!, {
-      WsUrl: 'wss://' + Links.shareDBServer + 'ws/',
-      pluginWsUrl: null,
-      namespace: 'codepad'
-    });
-    this.ShareAce = ShareAce;
-    ShareAce.on('ready', () => {
-      ShareAce.add(
-        editor,
-        ['code'],
-        [
-          // TODO: Removal
-          // SharedbAceRWControl,
-          // SharedbAceMultipleCursors
-        ]
-      );
-      if (this.props.sharedbAceIsInviting) {
-        this.props.handleEditorValueChange(this.props.sharedbAceInitValue!);
-        this.props.handleFinishInvite!();
-      }
-    });
 
-    // WebSocket connection status detection logic
-    const WS = ShareAce.WS;
-    let interval: any;
-    const sessionIdNotFound = () => {
-      clearInterval(interval);
-      WS.close();
-    };
-    const cannotReachServer = () => {
-      WS.reconnect();
-    };
-    const checkStatus = () => {
-      if (this.ShareAce === null) {
-        return;
-      }
-      checkSessionIdExists(
-        this.props.editorSessionId,
-        () => {},
-        sessionIdNotFound,
-        cannotReachServer
-      );
-    };
-    // Checks connection status every 5sec
-    interval = setInterval(checkStatus, 5000);
-
-    WS.addEventListener('open', (event: Event) => {
-      this.props.handleSetWebsocketStatus!(1);
-    });
-    WS.addEventListener('close', (event: Event) => {
-      this.props.handleSetWebsocketStatus!(0);
-    });
-  };
 
   /*
   // @ts-ignore
@@ -603,8 +427,8 @@ class Editor extends React.PureComponent<EditorProps, {}> {
 
 /* Override handler, so does not trigger when focus is in editor */
 const handlers = {
-  goGreen: () => {}
+  goGreen: () => { }
 };
 
 
-export default Editor;
+export default WithNavigation(WithShareAce(WithHighlighting(EditorBase)));
