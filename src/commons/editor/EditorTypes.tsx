@@ -25,6 +25,7 @@ export type AceMouseEvent = {
   getDocumentPosition: () => Position;
   inSelection: () => boolean; // Determines if the mouse position is selected.
   getButton: () => number; // 0 for leftmouse, 1 for middlemouse, 2 for rightmouse
+  cancelContextMenu(): () => void;
 };
 
 // This interface is actually unused but ace poorly documents this feature so

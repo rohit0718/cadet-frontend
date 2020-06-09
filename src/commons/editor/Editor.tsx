@@ -24,6 +24,9 @@ import AceRange from './EditorAceRange';
 import { AceMouseEvent, Position } from './EditorTypes';
 import { defaultKeyBindings as keyBindings } from './HotkeyBindings';
 
+// @ts-ignore
+import { ContextMenu, Menu, MenuItem } from '@blueprintjs/core';
+
 /**
  * @property editorValue - The string content of the react-ace editor
  * @property handleEditorChange  - A callback function
@@ -59,30 +62,40 @@ type StateProps = {
   sourceChapter?: number;
   externalLibraryName?: string;
   sourceVariant?: Variant;
+
+  // Comments related.
+  enableNewComments?: boolean;
+  comments?: { [lineNumber: number]: Comment };
 };
+
+export type Comment = {
+  name: string;
+  profilePic: string;
+  text: string;
+  visible: string;
+};
+// Goal:
+// 1: Detect right-clicks over gutter -> context menu
+// 2: Context menu clicks should allow user to put new comments (and toggle breakpoint)
+// 3: Allow comments to be added / removed.
+// 4: Detect newlines/removed lines
+// 5: Use above to move comments / breakpoints
+
+// Gah, why the requireJS in 2020.
+// @ts-ignore
+const LineWidgets = acequire('ace/line_widgets').LineWidgets;
 
 class Editor extends React.PureComponent<EditorProps, {}> {
   public ShareAce: any = null;
   public AceEditor: React.RefObject<AceEditor>;
   private markerIds: number[] = [];
   private completer: {};
+  // @ts-ignore
+  private commentManager: any;
 
   constructor(props: EditorProps) {
     super(props);
     this.AceEditor = React.createRef();
-    this.ShareAce = null;
-    this.markerIds = [];
-    this.onChangeMethod = (newCode: string) => {
-      if (this.props.handleUpdateHasUnsavedChanges) {
-        this.props.handleUpdateHasUnsavedChanges(true);
-      }
-      this.props.handleEditorValueChange(newCode);
-      this.handleVariableHighlighting();
-      const annotations = this.AceEditor.current!.editor.getSession().getAnnotations();
-      if (this.props.isEditorAutorun && annotations.length === 0) {
-        this.props.handleEditorEval();
-      }
-    };
 
     this.completer = {
       getCompletions: (editor: any, session: any, pos: any, prefix: any, callback: any) => {
@@ -136,6 +149,23 @@ class Editor extends React.PureComponent<EditorProps, {}> {
     // NOTE: the two `any`s below are because the Ace editor typedefs are
     // hopelessly incomplete
     editor.on('gutterclick' as any, this.handleGutterClick as any);
+    // TODO: refactor.
+    // TODO: right click should also select the row.
+    const gutter = (editor.renderer as any).$gutter as HTMLElement;
+    gutter.addEventListener('contextmenu', (e: MouseEvent) => {
+      e.preventDefault();
+      ContextMenu.show(
+        <Menu onContextMenu={ () => false }>
+          <MenuItem icon="full-circle" text="Toggle Breakpoint" />
+          <MenuItem icon="comment" text="Add comment" />
+        </Menu>,
+        { left: e.clientX, top: e.clientY },
+        () => { console.log('Closed');}
+      );
+      // indicate that context menu is open so we can add a CSS class to this element
+      this.setState({ isContextMenuOpen: true });
+    });
+    document.addEventListener('click', () => ContextMenu.hide());
 
     // Change all info annotations to error annotations
     session.on('changeAnnotation' as any, this.handleAnnotationChange(session));
@@ -455,6 +485,12 @@ class Editor extends React.PureComponent<EditorProps, {}> {
       return;
     }
 
+    // Ignore right-clicks, let the contextmenu handle it.
+    if (e.getButton() === 2) { 
+      return; 
+    }
+
+    // Breakpoint related.
     const row = e.getDocumentPosition().row;
     const content = e.editor.session.getLine(row);
     const breakpoints = e.editor.session.getBreakpoints();
