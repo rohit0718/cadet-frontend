@@ -32,7 +32,7 @@ import { SideContentTab, SideContentType } from '../../commons/sideContent/SideC
 import SideContentVideoDisplay from '../../commons/sideContent/SideContentVideoDisplay';
 import { generateSourceIntroduction } from '../../commons/utils/IntroductionHelper';
 import Workspace, { WorkspaceProps } from '../../commons/workspace/Workspace';
-import { WorkspaceLocations } from '../../commons/workspace/WorkspaceTypes';
+import { DebuggerContext, WorkspaceLocations } from '../../commons/workspace/WorkspaceTypes';
 
 export type PlaygroundProps = DispatchProps & StateProps & RouteComponentProps<{}>;
 
@@ -222,6 +222,10 @@ class Playground extends React.Component<PlaygroundProps, State> {
       />
     );
 
+    const toSpawnIntroductionTab = (debuggerContext: DebuggerContext) => {
+      return debuggerContext.workspaceLocation === 'playground';
+    };
+
     const playgroundIntroductionTab: SideContentTab = {
       label: 'Introduction',
       iconName: IconNames.COMPASS,
@@ -232,7 +236,7 @@ class Playground extends React.Component<PlaygroundProps, State> {
         />
       ),
       id: SideContentType.introduction,
-      toSpawn: () => true
+      toSpawn: toSpawnIntroductionTab
     };
 
     const tabs: SideContentTab[] = [playgroundIntroductionTab];
