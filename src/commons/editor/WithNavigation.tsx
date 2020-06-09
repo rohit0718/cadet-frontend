@@ -1,12 +1,8 @@
 import { EditorBase, Constructor } from './Editor';
-import {
-    createContext,
-    hasDeclaration
-} from 'js-slang';
+import { createContext, hasDeclaration } from 'js-slang';
 
 import { Links } from '../utils/Constants';
 import { Documentation } from '../documentation/Documentation';
-
 
 function WithNavigation<C extends Constructor<EditorBase>>(Editor: C) {
   return class extends Editor {
@@ -59,7 +55,7 @@ function WithNavigation<C extends Constructor<EditorBase>>(Editor: C) {
         window.open(`${url}source/source_${chapter}.pdf`);
       }
     };
-  }
+  };
 }
 
 export default WithNavigation;

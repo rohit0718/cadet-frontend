@@ -3,15 +3,13 @@ import sharedbAce from 'sharedb-ace';
 import { checkSessionIdExists } from '../collabEditing/CollabEditingHelper';
 import { Links } from '../utils/Constants';
 
-
-
 function WithShareAce<C extends Constructor<EditorBase>>(Editor: C) {
   return class extends Editor {
     public ShareAce: any = null;
-    
+
     public componentDidMount() {
       super.componentDidMount();
-        // Has session ID
+      // Has session ID
       if (this.props.editorSessionId !== '') {
         this.handleStartCollabEditing(this.editor);
       }
@@ -47,7 +45,7 @@ function WithShareAce<C extends Constructor<EditorBase>>(Editor: C) {
           this.props.handleFinishInvite!();
         }
       });
-  
+
       // WebSocket connection status detection logic
       const WS = ShareAce.WS;
       let interval: any;
@@ -71,7 +69,7 @@ function WithShareAce<C extends Constructor<EditorBase>>(Editor: C) {
       };
       // Checks connection status every 5sec
       interval = setInterval(checkStatus, 5000);
-  
+
       WS.addEventListener('open', (event: Event) => {
         this.props.handleSetWebsocketStatus!(1);
       });
@@ -79,7 +77,7 @@ function WithShareAce<C extends Constructor<EditorBase>>(Editor: C) {
         this.props.handleSetWebsocketStatus!(0);
       });
     };
-  }
+  };
 }
 
 export default WithShareAce;

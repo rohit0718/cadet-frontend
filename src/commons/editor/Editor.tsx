@@ -6,21 +6,17 @@ import * as React from 'react';
 import AceEditor, { IAceEditorProps } from 'react-ace';
 import { HotKeys } from 'react-hotkeys';
 
-import {
-  createContext,
-  getAllOccurrencesInScope
-} from 'js-slang';
+import { createContext, getAllOccurrencesInScope } from 'js-slang';
 import { HighlightRulesSelector, ModeSelector } from 'js-slang/dist/editors/ace/modes/source';
 import 'js-slang/dist/editors/ace/theme/source';
 import { Variant } from 'js-slang/dist/types';
-
 
 import { Documentation } from '../documentation/Documentation';
 import AceRange from './EditorAceRange';
 import { AceMouseEvent, Position } from './EditorTypes';
 import { defaultKeyBindings as keyBindings } from './HotkeyBindings';
 
-// =============== Mixins =============== 
+// =============== Mixins ===============
 import WithShareAce from './WithShareAce';
 import WithHighlighting from './WithHighlighting';
 import WithNavigation from './WithNavigation';
@@ -64,10 +60,9 @@ type StateProps = {
   sourceVariant?: Variant;
 };
 
-
 export class EditorBase extends React.PureComponent<EditorProps, {}> {
   public AceEditor: React.RefObject<AceEditor>;
-  // HOC: These props will be injected into AceEditor on render  
+  // HOC: These props will be injected into AceEditor on render
   // Use this to pass any values/callbacks into it.
   protected injectedRenderProps: { [key: string]: any } = {};
   private completer: {};
@@ -138,8 +133,6 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
 
     // Start autocompletion
     acequire('ace/ext/language_tools').setCompleters([this.completer]);
-
-
   }
 
   public componentDidUpdate(prevProps: EditorProps) {
@@ -217,7 +210,7 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
     if (this.props.isEditorAutorun && annotations.length === 0) {
       this.props.handleEditorEval();
     }
-  };
+  }
 
   // Used in navigating from occurence to navigation
   private moveCursor = (position: Position) => {
@@ -313,6 +306,6 @@ export class EditorBase extends React.PureComponent<EditorProps, {}> {
 
 /* Override handler, so does not trigger when focus is in editor */
 const handlers = {
-  goGreen: () => { }
+  goGreen: () => {}
 };
 export default WithTypeInference(WithNavigation(WithShareAce(WithHighlighting(EditorBase))));
